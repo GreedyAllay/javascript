@@ -4,8 +4,20 @@
     rel="stylesheet">
     </head>
 <canvas id="canvas" width="640" height="360"></canvas>
+  <button id="restart"
+    style="position: absolute; top:250px; left: 280px; width: 100px; height: 50px;" onclick="restart()" hidden>
+    retry
+  </button>
 <button onclick="toggleFullscreen()">full</button>
-<p id="debug" style="font-size: 48px;">niage</p>
+<br>
+<div class="centerit">
+<input type="checkbox" onclick="toggleMode('pause')"/>
+Pause
+<input type="checkbox" onclick="toggleMode('invinc')"/>
+Invincibility
+<input type="checkbox" onclick="toggleMode('debug')"/>
+Debug mode
+</div>
 <div hidden>
     <img src="bird.png" id="bird">
     <img src="ground.png" id="ground">
@@ -16,6 +28,8 @@
 
 <script>
     let invincible = false
+    let paused = false
+    let debug = false
     // document.fonts.load("20px 'botsmanticoutline'").then(() => {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
@@ -31,22 +45,45 @@
     let pipecount = 1
     let score = -2 
     let fullscreen = false
+    let deathmsg = [
+        "wow great",
+        "aaaaanddd... you're dead.",
+        "fucked up",
+        "cool",
+        "nice",
+        "great",
+        "awesome",
+        "wow",
+        "honestly you impressed me a little bit there",
+        "skill issue ngl",
+        "why did you kill that innocent bird??",
+        "dawg what",
+        "you suck",
+        "damn that was bad",
+        "did u even try tho?",
+        "ha! gayyyyy!!",
+        "idk",
+        "you did well",
+        "mhm",
+        "death is FUN!!",
+        "well",
+        "shameful",
+        "unbelievable.",
+        "if u cant do it just turn on invinc"
+    ]
     setInterval(gameTick, 1)
 
+
     function gameTick() {
+        if(paused == false){
         birdHeight -= birdVelocity;
-        document.getElementById("debug").textContent = birdHeight 
         birdVelocity -= .02;
         renderWorld();
         if(birdHeight > 300 && invincible == false) {
-            alert("aaaaanddd... you're dead.")
-            location.reload()
+            deathMessage()
+            reset()
             birdHeight = -999
-                }
-                if(birdHeight < pipesy[pipecount]) {
-                    console.log("FUCK MNEEEEEEEEEEEEEEEEEEEEEEEEEE!!!!")
-                }
-
+        }
         if(distance % 250 === 0) {
             pipesx[pipecount] = distance;
             pipesy[pipecount] = random(-100, -180);
@@ -57,6 +94,29 @@
         }
         distance++;
         bounds()
+    }
+}
+
+    function toggleMode(mode) {
+        if(mode == "pause") {
+            if(paused) {
+                paused = false
+            } else {
+                paused = true
+            }
+        } else if(mode == "debug") {
+            if(debug) {
+                debug = false
+            } else {
+                debug = true
+            }
+        } else if(mode == "invinc") {
+            if(invincible) {
+                invincible = false
+            } else {
+                invincible = true
+            }
+        }
     }
 
     function toggleFullscreen() {
@@ -88,20 +148,61 @@
     }
     }
 
+    function reset() {
+        pipesx = []
+        pipesy = []
+        birdHeight = 0
+        distance = 0
+        birdVelocity = 0
+        pipecount = 1
+        score = -2 
+    }
+
+    function deathMessage() {
+        paused = true
+        context.fillStyle = "#0000006B"
+        context.fillRect(0, 0, canvas.width, canvas.height) 
+        context.fillStyle = "#cf903e"
+        context.fillRect(canvas.width/2 - 100, canvas.height/2 - 150, 200, 300)
+        context.fillStyle = "#dedede"
+        context.fillRect(canvas.width/2 -  95, canvas.height/2 - 145, 190, 290)
+        context.fillStyle = "#000000"
+        context.font = "20px verdana";
+        let message = deathmsg[random(0, deathmsg.length)]
+        context.fillText(message, canvas.width/2 - message.length * 5, 70, 200);
+        context.fillText(score, 300, 200, 200);
+        document.getElementById("restart").hidden = false
+        if(score == -1) {
+        context.fillText("lol what", 300, 230, 200);
+        } else if (score == 0) {
+        context.fillText("didnt even get to the pipes", 200, 230, 200);
+        }
+    }
+
+    function restart() {
+        paused = false
+        document.getElementById("restart").hidden = true
+        reset()
+    }
+
     function renderWorld() {
         // wanted to skip rendering the offscreen pipes but it didnt work 1st try so fuck it idc abt performance noone wll ever reach the point that it will lag anyways lol
         let renderedPipes = 0
+        context.fillStyle = "black"
         context.font = '48px verdana';
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(bird, 200, birdHeight, 70, 70);  
+        context.drawImage(bird, 200, birdHeight, 70, 70); 
         for(let i = 0; i < pipesx.length; i++) {
             if(i == score && (pipesx[i] - distance) > - 780) {
+                if(debug) {
             context.fillText("pipex: " + (pipesx[i] - distance), 50, 100, 500);
             context.drawImage(pipered, 915 - distance + pipesx[i], pipesy[i] + 100, 75, 400);
+                } else {
+            context.drawImage(pipe, 915 - distance + pipesx[i], pipesy[i] + 100, 75, 400); 
+                }
             if(invincible == false && (birdHeight - 270 > pipesy[i]+60 || birdHeight - 270 < pipesy[i]-60 && score > 0)) {
-                alert("aww fuck me")
-                location.reload()
-                pipesy = []
+                deathMessage()
+                reset()
             }
             } else {
             context.drawImage(pipe, 915 - distance + pipesx[i], pipesy[i] + 100, 75, 400); 
@@ -114,7 +215,9 @@
         context.drawImage(ground, 400 + 0 - distance % 400, 320, 400, 100);
         context.drawImage(ground, 600 + 0 - distance % 400, 320, 400, 100);
         context.drawImage(ground, 800 + 0 - distance % 400, 320, 400, 100);
+        if(debug) {
         context.fillText("bird height: " + Math.round(birdHeight), 0, birdHeight, 500);
+        }
         if(score < 0) {
         context.fillText(0 % 250, 10, 50);
         } else {
@@ -122,23 +225,18 @@
         }
     }
 
-    document.body.onkeyup = function(e) {
-  if (e.key == " " ||
-      e.code == "Space" ||      
-      e.keyCode == 32      
-  ) {
-    birdVelocity = 1.5 ;
+document.body.addEventListener('keyup', function(e) {
+  if (e.key === " " || e.code === "Space" || e.keyCode === 32) {
+    birdVelocity = 1.5;
+    if(paused == false){
+    new Audio('jump.mp3').play();
+    }
   }
-//       document.body.onkeyup = function(e) {
-//   if (e.key == " " ||
-//       e.code == "P" ||      
-//       e.keyCode == 32      
-//   ) {
-//     birdVelocity = 1.5 ;
-//   }
 
-
-}
+  if (e.key === "p" || e.key === "P" || e.code === "KeyP" || e.keyCode === 80) {
+    toggleMode("pause");
+  }
+});
 function random(min, max) {
   return Math.floor(Math.random() * (max - min) ) + min;
 }
@@ -150,11 +248,41 @@ function random(min, max) {
     body {
         background-color: black;
         color:white;
+        font-family: verdana;
     }
     canvas {
         background-color: rgb(102, 219, 219);
         aspect-ratio: 16 / 9;
     }
+    input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #0077ff; /* modern way to change checkbox color */
+    cursor: pointer;
+    /* Optional: remove default styling and add custom */
+    appearance: none;
+    border: 2px solid #005ac0;
+    border-radius: 4px;
+    background-color: white;
+    position: relative;
+    font-family: verdana;
+    }   
+
+    input[type="checkbox"]:checked {
+    background-color: #0077ff;
+    }
+
+    input[type="checkbox"]:checked::after {
+    content: "✔";
+    color: white;
+    position: absolute;
+    top: 0;
+    left: 4px;
+    }
+    .centerit {
+        display: inline-flex;
+    }
+
     @font-face {
     font-family: 'flap';
     src: url('flap.ttf');
