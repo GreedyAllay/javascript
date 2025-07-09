@@ -1,0 +1,162 @@
+<head>
+      <link
+    href="flap.ttf"
+    rel="stylesheet">
+    </head>
+<canvas id="canvas" width="640" height="360"></canvas>
+<button onclick="toggleFullscreen()">full</button>
+<p id="debug" style="font-size: 48px;">niage</p>
+<div hidden>
+    <img src="bird.png" id="bird">
+    <img src="ground.png" id="ground">
+    <img src="pipe.png" id="pipe">
+    <img src="pipered.png" id="pipered">
+    <embed loop="true" src="sound.wav" hidden="true" type="video/quicktime"></embed>
+    </div>
+
+<script>
+    let invincible = false
+    // document.fonts.load("20px 'botsmanticoutline'").then(() => {
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const bird = document.getElementById("bird")
+    const ground = document.getElementById("ground")
+    const pipe = document.getElementById("pipe")
+    const pipered = document.getElementById("pipered")
+    let pipesx = []
+    let pipesy = []
+    let birdHeight = 0
+    let distance = 0
+    let birdVelocity = 0
+    let pipecount = 1
+    let score = -2 
+    let fullscreen = false
+    setInterval(gameTick, 1)
+
+    function gameTick() {
+        birdHeight -= birdVelocity;
+        document.getElementById("debug").textContent = birdHeight 
+        birdVelocity -= .02;
+        renderWorld();
+        if(birdHeight > 300 && invincible == false) {
+            alert("aaaaanddd... you're dead.")
+            location.reload()
+            birdHeight = -999
+                }
+                if(birdHeight < pipesy[pipecount]) {
+                    console.log("FUCK MNEEEEEEEEEEEEEEEEEEEEEEEEEE!!!!")
+                }
+
+        if(distance % 250 === 0) {
+            pipesx[pipecount] = distance;
+            pipesy[pipecount] = random(-100, -180);
+            pipecount++
+        }
+        if((distance + 90 ) % 250 === 0) {
+            score++
+        }
+        distance++;
+        bounds()
+    }
+
+    function toggleFullscreen() {
+        if(fullscreen) {
+            fullscreen = false
+            document.getElementById("canvas").style.height = "auto";
+            window.fullscreen()
+        } else {
+            fullscreen = true
+            document.getElementById("canvas").style.height = "100%";
+              if (canvas.requestFullscreen) {
+                    canvas.requestFullscreen();
+                } else if (canvas.webkitRequestFullscreen) { // Safari
+                    canvas.webkitRequestFullscreen();
+                } else if (canvas.msRequestFullscreen) { // IE11
+                    canvas.msRequestFullscreen();
+                }
+                }
+        }
+
+    function bounds() {
+    if(birdHeight < -20) {
+        birdHeight = -20
+        birdVelocity = 0;
+    }
+    if(birdHeight > 270 && invincible == true) {
+        birdHeight = 270;
+        birdVelocity = 0;
+    }
+    }
+
+    function renderWorld() {
+        // wanted to skip rendering the offscreen pipes but it didnt work 1st try so fuck it idc abt performance noone wll ever reach the point that it will lag anyways lol
+        let renderedPipes = 0
+        context.font = '48px verdana';
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bird, 200, birdHeight, 70, 70);  
+        for(let i = 0; i < pipesx.length; i++) {
+            if(i == score && (pipesx[i] - distance) > - 780) {
+            context.fillText("pipex: " + (pipesx[i] - distance), 50, 100, 500);
+            context.drawImage(pipered, 915 - distance + pipesx[i], pipesy[i] + 100, 75, 400);
+            if(invincible == false && (birdHeight - 270 > pipesy[i]+60 || birdHeight - 270 < pipesy[i]-60 && score > 0)) {
+                alert("aww fuck me")
+                location.reload()
+                pipesy = []
+            }
+            } else {
+            context.drawImage(pipe, 915 - distance + pipesx[i], pipesy[i] + 100, 75, 400); 
+            }
+            renderedPipes++
+
+        }
+        context.drawImage(ground, 0 + 0 - distance % 400, 320, 400, 100);
+        context.drawImage(ground, 200 + 0 - distance % 400, 320, 400, 100);
+        context.drawImage(ground, 400 + 0 - distance % 400, 320, 400, 100);
+        context.drawImage(ground, 600 + 0 - distance % 400, 320, 400, 100);
+        context.drawImage(ground, 800 + 0 - distance % 400, 320, 400, 100);
+        context.fillText("bird height: " + Math.round(birdHeight), 0, birdHeight, 500);
+        if(score < 0) {
+        context.fillText(0 % 250, 10, 50);
+        } else {
+        context.fillText(score % 250, 10, 50);
+        }
+    }
+
+    document.body.onkeyup = function(e) {
+  if (e.key == " " ||
+      e.code == "Space" ||      
+      e.keyCode == 32      
+  ) {
+    birdVelocity = 1.5 ;
+  }
+//       document.body.onkeyup = function(e) {
+//   if (e.key == " " ||
+//       e.code == "P" ||      
+//       e.keyCode == 32      
+//   ) {
+//     birdVelocity = 1.5 ;
+//   }
+
+
+}
+function random(min, max) {
+  return Math.floor(Math.random() * (max - min) ) + min;
+}
+// });
+</script>
+
+
+<style>
+    body {
+        background-color: black;
+        color:white;
+    }
+    canvas {
+        background-color: rgb(102, 219, 219);
+        aspect-ratio: 16 / 9;
+    }
+    @font-face {
+    font-family: 'flap';
+    src: url('flap.ttf');
+}
+</style>
